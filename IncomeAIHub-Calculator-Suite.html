@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IncomeAIHub — AI-Powered Income & Wealth Calculator Suite</title>
+<meta name="description" content="Free AI-powered Salary, SIP, FIRE, Net Worth & Creator Income calculators for India. Get personalized wealth insights instantly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #070b14;
+    --bg-panel: #0d1422;
+    --bg-card: #101a2c;
+    --border: rgba(0,255,242,0.16);
+    --cyan: #00fff2;
+    --purple: #a855f7;
+    --green: #2bffa3;
+    --amber: #ffb02e;
+    --red: #ff4d6d;
+    --text: #dce8f3;
+    --text-dim: #7e93ab;
+    --font-display: 'Orbitron', sans-serif;
+    --font-body: 'Rajdhani', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(0,255,242,0.08), transparent 40%),
+      radial-gradient(circle at 85% 20%, rgba(168,85,247,0.10), transparent 45%),
+      radial-gradient(circle at 50% 100%, rgba(43,255,163,0.06), transparent 50%);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* subtle scanline grid */
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background-image: linear-gradient(rgba(0,255,242,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,242,0.025) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events:none;
+    z-index:0;
+  }
+  a{color:var(--cyan); text-decoration:none;}
+
+  /* ---------- HEADER ---------- */
+  header{
+    position:relative; z-index:2;
+    padding: 22px 5vw 18px;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    border-bottom:1px solid var(--border);
+    backdrop-filter: blur(6px);
+  }
+  .logo{
+    font-family:var(--font-display); font-weight:900; font-size:1.5rem; letter-spacing:1px;
+    color:var(--text);
+  }
+  .logo span{color:var(--cyan); text-shadow:0 0 14px rgba(0,255,242,0.6);}
+  .logo small{
+    display:block; font-family:var(--font-body); font-weight:500; font-size:0.62rem;
+    letter-spacing:3px; color:var(--text-dim); text-transform:uppercase; margin-top:2px;
+  }
+  .score-badge{
+    display:flex; align-items:center; gap:12px;
+    background:var(--bg-panel); border:1px solid var(--border); border-radius:50px;
+    padding:6px 18px 6px 6px;
+  }
+  .score-ring{width:46px; height:46px; flex-shrink:0;}
+  .score-text{font-family:var(--font-mono); font-size:0.7rem; color:var(--text-dim); line-height:1.3;}
+  .score-text b{display:block; font-family:var(--font-display); font-size:0.95rem; color:var(--green);}
+
+  /* ---------- NAV TABS ---------- */
+  nav.tabs{
+    position:relative; z-index:2;
+    display:flex; gap:8px; padding:18px 5vw 0; flex-wrap:wrap;
+  }
+  .tab-btn{
+    font-family:var(--font-body); font-weight:600; font-size:0.86rem;
+    background:var(--bg-panel); color:var(--text-dim);
+    border:1px solid var(--border); border-radius:10px 10px 0 0;
+    padding:11px 18px; cursor:pointer; transition:all .2s ease;
+    display:flex; align-items:center; gap:8px;
+  }
+  .tab-btn:hover{color:var(--text); border-color:rgba(0,255,242,0.4);}
+  .tab-btn.active{
+    color:var(--bg); background:var(--cyan);
+    box-shadow:0 0 22px rgba(0,255,242,0.45);
+    border-color:var(--cyan);
+  }
+  .tab-btn .ico{font-size:1rem;}
+
+  main{position:relative; z-index:2; padding:0 5vw 60px; max-width:1280px; margin:0 auto;}
+  .panel{
+    display:none;
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:0 14px 14px 14px;
+    padding:32px clamp(18px,4vw,40px);
+    animation: fadeIn .35s ease;
+  }
+  .panel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .panel-head{margin-bottom:26px;}
+  .eyebrow{font-family:var(--font-mono); font-size:0.7rem; letter-spacing:3px; color:var(--purple); text-transform:uppercase;}
+  .panel-title{font-family:var(--font-display); font-size:1.5rem; color:var(--text); margin-top:6px;}
+  .panel-sub{color:var(--text-dim); font-size:0.92rem; margin-top:6px; max-width:640px;}
+
+  .grid{display:grid; grid-template-columns: 1fr 1fr; gap:28px;}
+  @media (max-width:880px){.grid{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:0.82rem; color:var(--text-dim); margin-bottom:6px; letter-spacing:0.3px;
+  }
+  .field label .val{font-family:var(--font-mono); color:var(--cyan); font-size:0.82rem;}
+  input[type=number], input[type=range], select, input[type=text]{
+    width:100%; background:var(--bg-card); border:1px solid var(--border);
+    border-radius:8px; color:var(--text); font-family:var(--font-mono); font-size:0.95rem;
+    padding:11px 12px; outline:none; transition:border-color .2s;
+  }
+  input[type=number]:focus, select:focus{border-color:var(--cyan);}
+  input[type=range]{padding:0; height:6px; accent-color:var(--cyan); cursor:pointer;}
+  .seg{display:flex; gap:8px; flex-wrap:wrap;}
+  .seg button{
+    flex:1; min-width:90px; background:var(--bg-card); border:1px solid var(--border);
+    color:var(--text-dim); font-family:var(--font-body); font-weight:600; font-size:0.82rem;
+    padding:9px 10px; border-radius:8px; cursor:pointer; transition:all .2s;
+  }
+  .seg button.active{background:rgba(0,255,242,0.12); color:var(--cyan); border-color:var(--cyan);}
+
+  .results{
+    background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:24px;
+  }
+  .res-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px dashed rgba(255,255,255,0.07);
+  }
+  .res-row:last-child{border-bottom:none;}
+  .res-row .lbl{color:var(--text-dim); font-size:0.86rem;}
+  .res-row .num{font-family:var(--font-mono); font-size:1.05rem; color:var(--text);}
+  .res-row.hero{
+    background:linear-gradient(135deg, rgba(0,255,242,0.08), rgba(168,85,247,0.08));
+    margin:-24px -24px 14px; padding:20px 24px; border-radius:12px 12px 0 0; border-bottom:1px solid var(--border);
+  }
+  .res-row.hero .lbl{color:var(--text); font-weight:600;}
+  .res-row.hero .num{font-size:1.55rem; color:var(--green); font-family:var(--font-display);}
+  .num.green{color:var(--green);} .num.red{color:var(--red);} .num.amber{color:var(--amber);} .num.cyan{color:var(--cyan);}
+
+  canvas{width:100%; max-width:100%; display:block;}
+
+  .ai-box{
+    margin-top:20px; background:linear-gradient(135deg, rgba(168,85,247,0.10), rgba(0,255,242,0.06));
+    border:1px solid rgba(168,85,247,0.35); border-radius:12px; padding:18px 20px;
+  }
+  .ai-box .ai-head{display:flex; align-items:center; gap:8px; font-family:var(--font-display); font-size:0.82rem; color:var(--purple); letter-spacing:1px; margin-bottom:10px;}
+  .ai-box ul{list-style:none; display:flex; flex-direction:column; gap:9px;}
+  .ai-box li{font-size:0.88rem; color:var(--text); line-height:1.5; padding-left:18px; position:relative;}
+  .ai-box li::before{content:'▸'; position:absolute; left:0; color:var(--cyan);}
+
+  .ad-slot{
+    margin:30px 0; padding:14px; border:1px dashed rgba(126,147,171,0.35); border-radius:10px;
+    text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:0.72rem;
+    letter-spacing:2px; text-transform:uppercase; background:rgba(255,255,255,0.015);
+  }
+
+  .btn{
+    font-family:var(--font-body); font-weight:700; font-size:0.92rem; letter-spacing:0.5px;
+    background:var(--cyan); color:var(--bg); border:none; border-radius:9px;
+    padding:13px 22px; cursor:pointer; transition:all .2s; box-shadow:0 0 0 rgba(0,255,242,0.4);
+  }
+  .btn:hover{box-shadow:0 0 24px rgba(0,255,242,0.55); transform:translateY(-1px);}
+  .btn.ghost{background:transparent; color:var(--cyan); border:1px solid var(--cyan);}
+
+  .row-list{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .row-list .item{display:grid; grid-template-columns:1fr 110px 36px; gap:8px; align-items:center;}
+  .row-list .item input[type=text]{font-family:var(--font-body);}
+  .remove-btn{background:none; border:1px solid var(--border); color:var(--red); border-radius:6px; height:42px; cursor:pointer;}
+
+  footer{
+    position:relative; z-index:2; text-align:center; padding:34px 5vw 50px;
+    color:var(--text-dim); font-size:0.8rem; border-top:1px solid var(--border);
+  }
+  footer .disclaimer{max-width:760px; margin:0 auto 14px; font-size:0.74rem; line-height:1.6; opacity:0.75;}
+
+  @media (max-width:600px){
+    .panel{padding:24px 16px;}
+    .res-row.hero .num{font-size:1.25rem;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Income<span>AI</span>Hub<small>Income · Wealth · Tax Intelligence</small></div>
+  <div class="score-badge">
+    <svg class="score-ring" viewBox="0 0 46 46">
+      <circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="5"/>
+      <circle id="scoreArc" cx="23" cy="23" r="19" fill="none" stroke="#2bffa3" stroke-width="5"
+        stroke-dasharray="119.4" stroke-dashoffset="119.4" stroke-linecap="round" transform="rotate(-90 23 23)"/>
+    </svg>
+    <div class="score-text">Financial Health<b id="scoreVal">--</b></div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabBar">
+  <button class="tab-btn active" data-tab="salary"><span class="ico">₹</span> Salary & In-Hand</button>
+  <button class="tab-btn" data-tab="sip"><span class="ico">📈</span> SIP & Compounding</button>
+  <button class="tab-btn" data-tab="fire"><span class="ico">🔥</span> FIRE Planner</button>
+  <button class="tab-btn" data-tab="networth"><span class="ico">⬡</span> Net Worth</button>
+  <button class="tab-btn" data-tab="creator"><span class="ico">▶</span> Creator Income</button>
+</nav>
+
+<main>
+
+  <!-- ================= SALARY TAB ================= -->
+  <section class="panel active" id="panel-salary">
+    <div class="panel-head">
+      <div class="eyebrow">Salary Income</div>
+      <div class="panel-title">In-Hand Salary Calculator (FY 2025-26)</div>
+      <div class="panel-sub">Estimate your monthly take-home pay from CTC using India's new tax regime slabs. Approximate — verify with a CA for final filing.</div>
+    </div>
+    <div class="grid">
+      <div>
+        <div class="field">
+          <label>Annual CTC <span class="val" id="ctcVal">₹ 12,00,000</span></label>
+          <input type="range" id="ctc" min="200000" max="10000000" step="10000" value="1200000">
+        </div>
+        <div class="field">
+          <label>Basic Pay (% of CTC) <span class="val" id="basicPctVal">40%</span></label>
+          <input type="range" id="basicPct" min="30" max="60" step="1" value="40">
+        </div>
+        <div class="field">
+          <label>Tax Regime</label>
+          <div class="seg" id="regimeSeg">
+            <button class="active" data-val="new">New Regime</button>
+            <button data-val="old">Old Regime</button>
+          </div>
+        </div>
+        <div class="field" id="oldRegimeField" style="display:none;">
+          <label>80C + 80D Deductions (annual) <span class="val" id="ded80Val">₹ 1,50,000</span></label>
+          <input type="range" id="ded80" min="0" max="250000" step="5000" value="150000">
+        </div>
+        <div class="field">
+          <label>City Type</label>
+          <div class="seg" id="citySeg">
+            <button class="active" data-val="metro">Metro</button>
+            <button data-val="nonmetro">Non-Metro</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Monthly Rent Paid <span class="val" id="rentVal">₹ 0</span></label>
+          <input type="range" id="rent" min="0" max="100000" step="500" value="0">
+        </div>
+      </div>
+      <div>
+        <div class="results">
+          <div class="res-row hero"><div class="lbl">Monthly In-Hand Salary</div><div class="num" id="r-inhand">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Annual Gross (CTC − Employer PF)</div><div class="num" id="r-gross">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Employee PF (12% of Basic)</div><div class="num red" id="r-pf">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Professional Tax</div><div class="num red" id="r-pt">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Income Tax (incl. 4% cess)</div><div class="num red" id="r-tax">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Effective Tax Rate</div><div class="num amber" id="r-etr">0%</div></div>
+          <div class="res-row"><div class="lbl">Annual Take-Home</div><div class="num green" id="r-annual">₹ 0</div></div>
+        </div>
+        <div class="ai-box">
+          <div class="ai-head">⚡ AI Salary Insight</div>
+          <ul id="salaryInsights"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="ad-slot">Advertisement — 728×90</div>
+  </section>
+
+  <!-- ================= SIP TAB ================= -->
+  <section class="panel" id="panel-sip">
+    <div class="panel-head">
+      <div class="eyebrow">Investment Income</div>
+      <div class="panel-title">SIP & Compound Growth Calculator</div>
+      <div class="panel-sub">Project the future value of monthly SIP investments or a one-time lumpsum using compound growth.</div>
+    </div>
+    <div class="grid">
+      <div>
+        <div class="field">
+          <label>Monthly SIP Amount <span class="val" id="sipAmtVal">₹ 10,000</span></label>
+          <input type="range" id="sipAmt" min="500" max="200000" step="500" value="10000">
+        </div>
+        <div class="field">
+          <label>Lumpsum (one-time, optional) <span class="val" id="sipLumpVal">₹ 0</span></label>
+          <input type="range" id="sipLump" min="0" max="5000000" step="10000" value="0">
+        </div>
+        <div class="field">
+          <label>Expected Annual Return <span class="val" id="sipRetVal">12%</span></label>
+          <input type="range" id="sipRet" min="4" max="25" step="0.5" value="12">
+        </div>
+        <div class="field">
+          <label>Investment Duration <span class="val" id="sipYrsVal">15 years</span></label>
+          <input type="range" id="sipYrs" min="1" max="40" step="1" value="15">
+        </div>
+        <div class="field">
+          <label>Annual Step-Up in SIP <span class="val" id="sipStepVal">0%</span></label>
+          <input type="range" id="sipStep" min="0" max="20" step="1" value="0">
+        </div>
+      </div>
+      <div>
+        <div class="results">
+          <div class="res-row hero"><div class="lbl">Maturity Value</div><div class="num" id="sip-maturity">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Total Invested</div><div class="num" id="sip-invested">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Wealth Gained</div><div class="num green" id="sip-gain">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Wealth Multiplier</div><div class="num cyan" id="sip-mult">0x</div></div>
+        </div>
+        <canvas id="sipChart" height="170"></canvas>
+        <div class="ai-box">
+          <div class="ai-head">⚡ AI Investment Insight</div>
+          <ul id="sipInsights"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="ad-slot">Advertisement — 728×90</div>
+  </section>
+
+  <!-- ================= FIRE TAB ================= -->
+  <section class="panel" id="panel-fire">
+    <div class="panel-head">
+      <div class="eyebrow">Wealth Building</div>
+      <div class="panel-title">FIRE Calculator — Financial Independence Timeline</div>
+      <div class="panel-sub">Find your FIRE number and estimate how many years until you can sustain your lifestyle from investments alone.</div>
+    </div>
+    <div class="grid">
+      <div>
+        <div class="field">
+          <label>Current Age <span class="val" id="fireAgeVal">28</span></label>
+          <input type="range" id="fireAge" min="18" max="65" step="1" value="28">
+        </div>
+        <div class="field">
+          <label>Current Monthly Expenses <span class="val" id="fireExpVal">₹ 40,000</span></label>
+          <input type="range" id="fireExp" min="5000" max="500000" step="1000" value="40000">
+        </div>
+        <div class="field">
+          <label>Current Investments / Savings <span class="val" id="fireCurVal">₹ 5,00,000</span></label>
+          <input type="range" id="fireCur" min="0" max="20000000" step="10000" value="500000">
+        </div>
+        <div class="field">
+          <label>Monthly Investment <span class="val" id="fireMonVal">₹ 25,000</span></label>
+          <input type="range" id="fireMon" min="1000" max="500000" step="1000" value="25000">
+        </div>
+        <div class="field">
+          <label>Expected Return (pre-FIRE) <span class="val" id="fireRetVal">11%</span></label>
+          <input type="range" id="fireRet" min="4" max="20" step="0.5" value="11">
+        </div>
+        <div class="field">
+          <label>Safe Withdrawal Rate <span class="val" id="fireSwrVal">4%</span></label>
+          <input type="range" id="fireSwr" min="2.5" max="6" step="0.25" value="4">
+        </div>
+      </div>
+      <div>
+        <div class="results">
+          <div class="res-row hero"><div class="lbl">Your FIRE Number</div><div class="num" id="fire-number">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Years to Financial Independence</div><div class="num cyan" id="fire-years">0</div></div>
+          <div class="res-row"><div class="lbl">Projected FIRE Age</div><div class="num green" id="fire-age">0</div></div>
+          <div class="res-row"><div class="lbl">Annual Expenses (today)</div><div class="num" id="fire-annexp">₹ 0</div></div>
+        </div>
+        <div class="ai-box">
+          <div class="ai-head">⚡ AI Wealth Roadmap</div>
+          <ul id="fireInsights"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="ad-slot">Advertisement — 728×90</div>
+  </section>
+
+  <!-- ================= NET WORTH TAB ================= -->
+  <section class="panel" id="panel-networth">
+    <div class="panel-head">
+      <div class="eyebrow">Wealth Building</div>
+      <div class="panel-title">Net Worth Tracker</div>
+      <div class="panel-sub">List your assets and liabilities to calculate your real net worth right now.</div>
+    </div>
+    <div class="grid">
+      <div>
+        <h4 style="font-family:var(--font-display); font-size:0.85rem; color:var(--green); margin-bottom:12px;">ASSETS</h4>
+        <div class="row-list" id="assetList"></div>
+        <button class="btn ghost" id="addAsset" style="width:100%;">+ Add Asset</button>
+      </div>
+      <div>
+        <h4 style="font-family:var(--font-display); font-size:0.85rem; color:var(--red); margin-bottom:12px;">LIABILITIES</h4>
+        <div class="row-list" id="liabList"></div>
+        <button class="btn ghost" id="addLiab" style="width:100%; border-color:var(--red); color:var(--red);">+ Add Liability</button>
+      </div>
+    </div>
+    <div class="results" style="margin-top:24px;">
+      <div class="res-row hero"><div class="lbl">Net Worth</div><div class="num" id="nw-total">₹ 0</div></div>
+      <div class="res-row"><div class="lbl">Total Assets</div><div class="num green" id="nw-assets">₹ 0</div></div>
+      <div class="res-row"><div class="lbl">Total Liabilities</div><div class="num red" id="nw-liabs">₹ 0</div></div>
+      <div class="res-row"><div class="lbl">Debt-to-Asset Ratio</div><div class="num amber" id="nw-ratio">0%</div></div>
+    </div>
+    <div class="ai-box">
+      <div class="ai-head">⚡ AI Net Worth Insight</div>
+      <ul id="nwInsights"></ul>
+    </div>
+    <div class="ad-slot">Advertisement — 728×90</div>
+  </section>
+
+  <!-- ================= CREATOR TAB ================= -->
+  <section class="panel" id="panel-creator">
+    <div class="panel-head">
+      <div class="eyebrow">Creator Income</div>
+      <div class="panel-title">YouTube · AdSense · Affiliate Revenue Calculator</div>
+      <div class="panel-sub">Estimate combined monthly revenue across YouTube ads, blog AdSense, and affiliate commissions.</div>
+    </div>
+    <div class="grid">
+      <div>
+        <h4 style="font-family:var(--font-display); font-size:0.78rem; color:var(--cyan); margin-bottom:10px;">YOUTUBE</h4>
+        <div class="field">
+          <label>Monthly Views <span class="val" id="ytViewsVal">200,000</span></label>
+          <input type="range" id="ytViews" min="0" max="20000000" step="10000" value="200000">
+        </div>
+        <div class="field">
+          <label>RPM (₹ per 1000 views) <span class="val" id="ytRpmVal">₹ 80</span></label>
+          <input type="range" id="ytRpm" min="5" max="600" step="5" value="80">
+        </div>
+        <h4 style="font-family:var(--font-display); font-size:0.78rem; color:var(--purple); margin:18px 0 10px;">BLOG / WEBSITE ADSENSE</h4>
+        <div class="field">
+          <label>Monthly Pageviews <span class="val" id="pvVal">100,000</span></label>
+          <input type="range" id="pv" min="0" max="10000000" step="5000" value="100000">
+        </div>
+        <div class="field">
+          <label>RPM (₹ per 1000 pageviews) <span class="val" id="pvRpmVal">₹ 120</span></label>
+          <input type="range" id="pvRpm" min="5" max="1000" step="5" value="120">
+        </div>
+        <h4 style="font-family:var(--font-display); font-size:0.78rem; color:var(--green); margin:18px 0 10px;">AFFILIATE</h4>
+        <div class="field">
+          <label>Monthly Affiliate Clicks <span class="val" id="affClicksVal">3,000</span></label>
+          <input type="range" id="affClicks" min="0" max="200000" step="100" value="3000">
+        </div>
+        <div class="field">
+          <label>Conversion Rate <span class="val" id="affConvVal">2%</span></label>
+          <input type="range" id="affConv" min="0.1" max="15" step="0.1" value="2">
+        </div>
+        <div class="field">
+          <label>Avg. Commission per Sale <span class="val" id="affCommVal">₹ 300</span></label>
+          <input type="range" id="affComm" min="10" max="10000" step="10" value="300">
+        </div>
+      </div>
+      <div>
+        <div class="results">
+          <div class="res-row hero"><div class="lbl">Total Estimated Monthly Revenue</div><div class="num" id="cr-total">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">YouTube Ad Revenue</div><div class="num cyan" id="cr-yt">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">AdSense (Blog) Revenue</div><div class="num cyan" id="cr-pv">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Affiliate Commission</div><div class="num green" id="cr-aff">₹ 0</div></div>
+          <div class="res-row"><div class="lbl">Projected Annual Revenue</div><div class="num amber" id="cr-annual">₹ 0</div></div>
+        </div>
+        <div class="ai-box">
+          <div class="ai-head">⚡ AI Growth Insight</div>
+          <ul id="crInsights"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="ad-slot">Advertisement — 728×90</div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="disclaimer">Disclaimer: IncomeAIHub calculators provide estimates for educational purposes only and are not financial, tax, or investment advice. Tax slabs reflect the announced FY 2025-26 new regime structure and may change with future notifications — please verify with a qualified CA or financial advisor before making decisions.</div>
+  © 2026 IncomeAIHub · Built for India's income & wealth journey
+</footer>
+
+<script>
+const fmt = n => '₹ ' + Math.round(n).toLocaleString('en-IN');
+const fmtShort = n => {
+  if(n>=10000000) return '₹ ' + (n/10000000).toFixed(2) + ' Cr';
+  if(n>=100000) return '₹ ' + (n/100000).toFixed(2) + ' L';
+  return fmt(n);
+};
+
+/* ---------------- TAB SWITCHING ---------------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------------- SEGMENT BUTTONS ---------------- */
+function wireSeg(id, onChange){
+  const seg = document.getElementById(id);
+  seg.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      seg.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      onChange(b.dataset.val);
+    });
+  });
+}
+
+/* ================= SALARY CALCULATOR ================= */
+const ctcEl=document.getElementById('ctc'), basicPctEl=document.getElementById('basicPct');
+const rentEl=document.getElementById('rent'), ded80El=document.getElementById('ded80');
+let regime='new', cityType='metro';
+
+function newRegimeTax(income){
+  const slabs=[[400000,0],[800000,0.05],[1200000,0.10],[1600000,0.15],[2000000,0.20],[2400000,0.25],[Infinity,0.30]];
+  let tax=0, prev=0;
+  for(const [limit,rate] of slabs){
+    if(income>prev){ tax += (Math.min(income,limit)-prev)*rate; prev=limit; } else break;
+  }
+  if(income<=1200000) tax=0; // Section 87A rebate, new regime
+  return tax;
+}
+function oldRegimeTax(income){
+  const slabs=[[250000,0],[500000,0.05],[1000000,0.20],[Infinity,0.30]];
+  let tax=0, prev=0;
+  for(const [limit,rate] of slabs){
+    if(income>prev){ tax += (Math.min(income,limit)-prev)*rate; prev=limit; } else break;
+  }
+  if(income<=500000) tax=0; // Section 87A rebate, old regime
+  return tax;
+}
+
+function calcSalary(){
+  const ctc=+ctcEl.value, basicPct=+basicPctEl.value/100;
+  const basic = ctc*basicPct;
+  const employerPF = Math.min(basic,1800000) * 0.12 / 12 * 12; // simplified annual
+  const employeePF = employerPF;
+  const grossAnnual = ctc - employerPF;
+  const stdDeduction = regime==='new' ? 75000 : 50000;
+  const rent = +rentEl.value*12;
+
+  let hraExempt=0;
+  if(regime==='old' && rent>0){
+    const hra = basic*0.5*(cityType==='metro'?1:0.8);
+    const rentMinus10 = Math.max(rent - basic*0.1,0);
+    hraExempt = Math.min(hra, rentMinus10, hra);
+  }
+  const ded80 = regime==='old' ? +ded80El.value : 0;
+  let taxableIncome = grossAnnual - stdDeduction - employeePF - hraExempt - ded80;
+  taxableIncome = Math.max(taxableIncome,0);
+
+  let tax = regime==='new' ? newRegimeTax(taxableIncome) : oldRegimeTax(taxableIncome);
+  tax = tax * 1.04; // 4% health & education cess
+
+  const profTax = 2400; // approx annual flat assumption for applicable states
+  const annualTakeHome = grossAnnual - employeePF - tax - profTax;
+  const monthlyTakeHome = annualTakeHome/12;
+  const etr = ctc>0 ? (tax/ctc*100) : 0;
+
+  document.getElementById('r-inhand').textContent = fmt(monthlyTakeHome);
+  document.getElementById('r-gross').textContent = fmt(grossAnnual);
+  document.getElementById('r-pf').textContent = '− ' + fmt(employeePF);
+  document.getElementById('r-pt').textContent = '− ' + fmt(profTax);
+  document.getElementById('r-tax').textContent = '− ' + fmt(tax);
+  document.getElementById('r-etr').textContent = etr.toFixed(1)+'%';
+  document.getElementById('r-annual').textContent = fmt(annualTakeHome);
+
+  const insights=[];
+  const savRate = (1 - (employeePF*0+0)); // placeholder not used
+  if(etr>20) insights.push('Your effective tax rate is above 20%. Consider maximizing 80C, NPS (80CCD-1B), and health insurance (80D) deductions if you switch to the old regime.');
+  else insights.push('Your effective tax rate is relatively efficient at '+etr.toFixed(1)+'%. The new regime is working well for your income level.');
+  if(regime==='new' && rent>0) insights.push('You are paying rent but using the new regime, which does not allow HRA exemption. Compare with the old regime — it may save you tax if your rent and 80C investments are high.');
+  if(basicPct<35) insights.push('Your Basic pay is on the lower side ('+(basicPct*100).toFixed(0)+'%). A higher basic increases PF and gratuity accumulation, helping long-term wealth building.');
+  if(monthlyTakeHome>0) insights.push('Aim to invest at least 20% of your in-hand salary ('+fmt(monthlyTakeHome*0.2)+'/month) toward SIPs to build long-term wealth — try the SIP tab.');
+  document.getElementById('salaryInsights').innerHTML = insights.map(i=>'<li>'+i+'</li>').join('');
+
+  updateHealthScore();
+}
+[ctcEl,basicPctEl,rentEl,ded80El].forEach(el=>el.addEventListener('input', ()=>{
+  document.getElementById('ctcVal').textContent = fmt(+ctcEl.value);
+  document.getElementById('basicPctVal').textContent = basicPctEl.value+'%';
+  document.getElementById('rentVal').textContent = fmt(+rentEl.value);
+  document.getElementById('ded80Val').textContent = fmt(+ded80El.value);
+  calcSalary();
+}));
+wireSeg('regimeSeg', val=>{ regime=val; document.getElementById('oldRegimeField').style.display = val==='old'?'block':'none'; calcSalary(); });
+wireSeg('citySeg', val=>{ cityType=val; calcSalary(); });
+
+/* ================= SIP CALCULATOR ================= */
+const sipAmt=document.getElementById('sipAmt'), sipLump=document.getElementById('sipLump');
+const sipRet=document.getElementById('sipRet'), sipYrs=document.getElementById('sipYrs'), sipStep=document.getElementById('sipStep');
+
+function calcSIP(){
+  const monthly=+sipAmt.value, lump=+sipLump.value, annualRet=+sipRet.value/100;
+  const years=+sipYrs.value, stepUp=+sipStep.value/100;
+  const r = annualRet/12;
+  let corpus = lump*Math.pow(1+annualRet,years);
+  let invested = lump;
+  let curMonthly = monthly;
+  const yearData=[];
+  for(let y=1;y<=years;y++){
+    let yearStartCorpus=corpus;
+    for(let m=1;m<=12;m++){
+      corpus = corpus*(1+r) + curMonthly;
+      invested += curMonthly;
+    }
+    yearData.push({year:y, corpus, invested});
+    curMonthly = curMonthly*(1+stepUp);
+  }
+  const gain = corpus-invested;
+  document.getElementById('sip-maturity').textContent = fmtShort(corpus);
+  document.getElementById('sip-invested').textContent = fmtShort(invested);
+  document.getElementById('sip-gain').textContent = fmtShort(gain);
+  document.getElementById('sip-mult').textContent = (corpus/Math.max(invested,1)).toFixed(2)+'x';
+  drawSipChart(yearData);
+
+  const insights=[];
+  if(corpus/invested > 3) insights.push('Your money will grow over '+(corpus/invested).toFixed(1)+'x — the power of compounding is doing most of the work here, especially in the later years.');
+  if(stepUp===0) insights.push('You have no annual step-up. Even a 10% yearly increase in SIP (matching salary hikes) could significantly boost your final corpus — try the step-up slider.');
+  if(years<10) insights.push('Equity-oriented SIPs typically need 7-10+ years to ride out market volatility. Consider a longer horizon if your goal allows.');
+  insights.push('A monthly SIP of '+fmt(monthly)+' growing at '+annualRet*100+'% could fund a goal worth '+fmtShort(corpus)+' in '+years+' years.');
+  document.getElementById('sipInsights').innerHTML = insights.map(i=>'<li>'+i+'</li>').join('');
+}
+
+function drawSipChart(data){
+  const canvas=document.getElementById('sipChart');
+  const ctx=canvas.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const w=canvas.clientWidth, h=170;
+  canvas.width=w*dpr; canvas.height=h*dpr; ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  const maxVal = Math.max(...data.map(d=>d.corpus));
+  const barW = w/data.length;
+  data.forEach((d,i)=>{
+    const investedH = (d.invested/maxVal)*(h-20);
+    const corpusH = (d.corpus/maxVal)*(h-20);
+    const x = i*barW + barW*0.2;
+    const bw = barW*0.6;
+    ctx.fillStyle = 'rgba(0,255,242,0.18)';
+    ctx.fillRect(x, h-corpusH-10, bw, corpusH);
+    ctx.fillStyle = 'rgba(168,85,247,0.55)';
+    ctx.fillRect(x, h-investedH-10, bw, investedH);
+  });
+  ctx.fillStyle='rgba(126,147,171,0.8)'; ctx.font='10px Share Tech Mono';
+  ctx.fillText('Purple = Invested  ·  Cyan = Corpus Value', 4, 14);
+}
+[sipAmt,sipLump,sipRet,sipYrs,sipStep].forEach(el=>el.addEventListener('input', ()=>{
+  document.getElementById('sipAmtVal').textContent = fmt(+sipAmt.value);
+  document.getElementById('sipLumpVal').textContent = fmt(+sipLump.value);
+  document.getElementById('sipRetVal').textContent = sipRet.value+'%';
+  document.getElementById('sipYrsVal').textContent = sipYrs.value+' years';
+  document.getElementById('sipStepVal').textContent = sipStep.value+'%';
+  calcSIP();
+}));
+
+/* ================= FIRE CALCULATOR ================= */
+const fireAge=document.getElementById('fireAge'), fireExp=document.getElementById('fireExp');
+const fireCur=document.getElementById('fireCur'), fireMon=document.getElementById('fireMon');
+const fireRet=document.getElementById('fireRet'), fireSwr=document.getElementById('fireSwr');
+
+function calcFIRE(){
+  const age=+fireAge.value, monthlyExp=+fireExp.value, current=+fireCur.value;
+  const monthlyInv=+fireMon.value, ret=+fireRet.value/100, swr=+fireSwr.value/100;
+  const annualExp = monthlyExp*12;
+  const fireNumber = annualExp/swr;
+  let corpus=current, years=0;
+  const r=ret/12;
+  while(corpus<fireNumber && years<70){
+    for(let m=0;m<12;m++) corpus = corpus*(1+r)+monthlyInv;
+    years++;
+  }
+  document.getElementById('fire-number').textContent = fmtShort(fireNumber);
+  document.getElementById('fire-years').textContent = years + ' yrs';
+  document.getElementById('fire-age').textContent = (age+years);
+  document.getElementById('fire-annexp').textContent = fmt(annualExp);
+
+  const insights=[];
+  if(years>30) insights.push('At this savings rate, FIRE is over 30 years away. Increasing your monthly investment by even '+fmt(monthlyInv*0.2)+' could meaningfully shorten this timeline.');
+  else if(years<=15) insights.push('You are on a strong path — financial independence in '+years+' years is an excellent trajectory for your age group.');
+  else insights.push('You are on track for financial independence around age '+(age+years)+'. Staying consistent with SIPs through market cycles will be key.');
+  const savingsRatio = monthlyInv/(monthlyInv+monthlyExp);
+  if(savingsRatio<0.3) insights.push('Your current savings rate is roughly '+(savingsRatio*100).toFixed(0)+'% of cash flow. FIRE practitioners typically target 40-50%+ to retire significantly earlier.');
+  insights.push('Your FIRE number of '+fmtShort(fireNumber)+' assumes a '+(swr*100)+'% safe withdrawal rate — a lower SWR (e.g. 3%) is more conservative for India' + String.fromCharCode(39) + 's inflation environment.');
+  document.getElementById('fireInsights').innerHTML = insights.map(i=>'<li>'+i+'</li>').join('');
+}
+[fireAge,fireExp,fireCur,fireMon,fireRet,fireSwr].forEach(el=>el.addEventListener('input', ()=>{
+  document.getElementById('fireAgeVal').textContent = fireAge.value;
+  document.getElementById('fireExpVal').textContent = fmt(+fireExp.value);
+  document.getElementById('fireCurVal').textContent = fmt(+fireCur.value);
+  document.getElementById('fireMonVal').textContent = fmt(+fireMon.value);
+  document.getElementById('fireRetVal').textContent = fireRet.value+'%';
+  document.getElementById('fireSwrVal').textContent = fireSwr.value+'%';
+  calcFIRE();
+}));
+
+/* ================= NET WORTH TRACKER ================= */
+let assetId=0, liabId=0;
+function addRow(listId, prefix, defaultName, defaultVal, idCounterSetter){
+  const list=document.getElementById(listId);
+  const id = prefix+'_'+(prefix==='asset'?assetId++:liabId++);
+  const row=document.createElement('div');
+  row.className='item'; row.dataset.id=id;
+  row.innerHTML = `<input type="text" placeholder="${defaultName}" value="${defaultName}">
+    <input type="number" placeholder="Amount" value="${defaultVal}">
+    <button class="remove-btn">×</button>`;
+  row.querySelector('.remove-btn').addEventListener('click', ()=>{ row.remove(); calcNetWorth(); });
+  row.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', calcNetWorth));
+  list.appendChild(row);
+}
+document.getElementById('addAsset').addEventListener('click', ()=>addRow('assetList','asset','New Asset',0));
+document.getElementById('addLiab').addEventListener('click', ()=>addRow('liabList','liab','New Liability',0));
+// seed defaults
+addRow('assetList','asset','Savings & FDs',300000);
+addRow('assetList','asset','Stocks & Mutual Funds',500000);
+addRow('assetList','asset','Real Estate / Property',2000000);
+addRow('liabList','liab','Home Loan',1500000);
+addRow('liabList','liab','Credit Card / Personal Loan',50000);
+
+function calcNetWorth(){
+  let assets=0, liabs=0;
+  document.querySelectorAll('#assetList .item').forEach(r=>assets+=(+r.querySelectorAll('input')[1].value||0));
+  document.querySelectorAll('#liabList .item').forEach(r=>liabs+=(+r.querySelectorAll('input')[1].value||0));
+  const net = assets-liabs;
+  document.getElementById('nw-total').textContent = fmtShort(net);
+  document.getElementById('nw-assets').textContent = fmtShort(assets);
+  document.getElementById('nw-liabs').textContent = fmtShort(liabs);
+  const ratio = assets>0 ? (liabs/assets*100) : 0;
+  document.getElementById('nw-ratio').textContent = ratio.toFixed(1)+'%';
+
+  const insights=[];
+  if(ratio>60) insights.push('Your debt-to-asset ratio is above 60% — prioritize paying down high-interest liabilities like personal loans and credit card debt first.');
+  else if(ratio<20) insights.push('Your debt-to-asset ratio is healthy and low. You have room to consider leveraged investments like a home purchase if it fits your goals.');
+  else insights.push('Your debt-to-asset ratio of '+ratio.toFixed(0)+'% is moderate — a balanced position between growth assets and manageable liabilities.');
+  if(net>0) insights.push('Your current net worth is '+fmtShort(net)+'. Track this monthly to see your wealth-building trendline over time.');
+  document.getElementById('nwInsights').innerHTML = insights.map(i=>'<li>'+i+'</li>').join('');
+  updateHealthScore();
+}
+
+/* ================= CREATOR INCOME ================= */
+const ytViews=document.getElementById('ytViews'), ytRpm=document.getElementById('ytRpm');
+const pv=document.getElementById('pv'), pvRpm=document.getElementById('pvRpm');
+const affClicks=document.getElementById('affClicks'), affConv=document.getElementById('affConv'), affComm=document.getElementById('affComm');
+
+function calcCreator(){
+  const ytRev = (+ytViews.value/1000)*(+ytRpm.value);
+  const pvRev = (+pv.value/1000)*(+pvRpm.value);
+  const affRev = (+affClicks.value)*(+affConv.value/100)*(+affComm.value);
+  const total = ytRev+pvRev+affRev;
+  document.getElementById('cr-yt').textContent = fmt(ytRev);
+  document.getElementById('cr-pv').textContent = fmt(pvRev);
+  document.getElementById('cr-aff').textContent = fmt(affRev);
+  document.getElementById('cr-total').textContent = fmt(total);
+  document.getElementById('cr-annual').textContent = fmtShort(total*12);
+
+  const insights=[];
+  const shares=[['YouTube',ytRev],['Blog AdSense',pvRev],['Affiliate',affRev]].sort((a,b)=>b[1]-a[1]);
+  insights.push(shares[0][0]+' is currently your biggest income stream, contributing '+(total>0?(shares[0][1]/total*100).toFixed(0):0)+'% of total revenue.');
+  if(affRev < total*0.2) insights.push('Affiliate income is under 20% of your total — adding well-placed affiliate links to high-traffic content could diversify and grow revenue without more views.');
+  if(+ytRpm.value < 60) insights.push('Your YouTube RPM is on the lower side. Finance, tech, and business niches typically command higher RPMs in the Indian market — review your content category and ad formats.');
+  insights.push('At this run rate, you are projected to earn '+fmtShort(total*12)+' annually across all three channels combined.');
+  document.getElementById('crInsights').innerHTML = insights.map(i=>'<li>'+i+'</li>').join('');
+}
+[ytViews,ytRpm,pv,pvRpm,affClicks,affConv,affComm].forEach(el=>el.addEventListener('input', ()=>{
+  document.getElementById('ytViewsVal').textContent = (+ytViews.value).toLocaleString('en-IN');
+  document.getElementById('ytRpmVal').textContent = fmt(+ytRpm.value);
+  document.getElementById('pvVal').textContent = (+pv.value).toLocaleString('en-IN');
+  document.getElementById('pvRpmVal').textContent = fmt(+pvRpm.value);
+  document.getElementById('affClicksVal').textContent = (+affClicks.value).toLocaleString('en-IN');
+  document.getElementById('affConvVal').textContent = affConv.value+'%';
+  document.getElementById('affCommVal').textContent = fmt(+affComm.value);
+  calcCreator();
+}));
+
+/* ================= HEALTH SCORE (signature element) ================= */
+function updateHealthScore(){
+  // Combine savings capacity from salary tab + net worth ratio into one 0-100 score
+  const ctc=+ctcEl.value;
+  const monthlyTakeHome = parseFloat(document.getElementById('r-inhand').textContent.replace(/[₹,\\s]/g,''))||0;
+  const nwRatioText = document.getElementById('nw-ratio').textContent;
+  const debtRatio = parseFloat(nwRatioText)||0;
+  let score = 50;
+  score += monthlyTakeHome > 50000 ? 15 : (monthlyTakeHome/50000)*15;
+  score += debtRatio<30 ? 20 : debtRatio<60 ? 8 : -10;
+  score += ctc>1500000 ? 15 : (ctc/1500000)*15;
+  score = Math.max(5, Math.min(99, Math.round(score)));
+  document.getElementById('scoreVal').textContent = score;
+  const circumference = 2*Math.PI*19;
+  const offset = circumference - (score/100)*circumference;
+  const arc=document.getElementById('scoreArc');
+  arc.setAttribute('stroke-dasharray', circumference.toFixed(1));
+  arc.setAttribute('stroke-dashoffset', offset.toFixed(1));
+  arc.setAttribute('stroke', score>70?'#2bffa3':score>40?'#ffb02e':'#ff4d6d');
+}
+
+/* ---------------- INIT ---------------- */
+calcSalary();
+calcSIP();
+calcFIRE();
+calcNetWorth();
+calcCreator();
+</script>
+</body>
+</html>
